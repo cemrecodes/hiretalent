@@ -1,0 +1,98 @@
+version: '1'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.12
+    container_name: elasticsearch
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    networks:
+      - mynet
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail http://elasticsearch:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: mysql:latest
+    container_name: db
+    ports:
+      - 3307:3306
+    environment:
+      - MYSQL_DATABASE=hiretalent
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=root
+      - MYSQL_PORT=3306
+    volumes:
+      - /hiretalent-data:/var/lib/mysql
+    networks:
+      - mynet
+
+  selenium:
+    image: selenium/standalone-chrome:latest
+    container_name: selenium
+    ports:
+      - 4444:4444
+    networks:
+      - mynet
+    privileged: true
+    shm_size: 2g
+
+  apacheds:
+    image: openmicroscopy/apacheds
+    container_name: apacheds
+    ports:
+      - 10389:10389
+    networks:
+      - mynet
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend/hiretalent-react
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - 3000:3000
+    networks:
+      - mynet
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend/hiretalent
+      dockerfile: Dockerfile
+  #  restart: on-failure
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/hiretalent?createDatabaseIfNotExist=true&autoReconnect=true
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_ELASTICSEARCH_URIS=elasticsearch:9200
+      - SPRING_DATA_ELASTICSEARCH_CLUSTER-NODES=elasticsearch:9200
+      - SELENIUM_URL=http://selenium:4444/wd/hub
+      - LDAP_URL=ldap://apacheds:10389
+      - LDAP_DC=openmicroscopy
+      - LDAP_DC2=org
+    networks:
+      - mynet
+    ports:
+      - 8080:8080
+
+networks:
+  mynet:
+    driver: bridge
+
+#volumes:
+#  db:
+#    driver: local

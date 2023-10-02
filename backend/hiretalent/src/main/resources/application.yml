@@ -1,0 +1,56 @@
+spring:
+  jpa:
+    generate-ddl: 'true'
+    show-sql: 'false'
+    hibernate:
+      auto-ddl: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        format_sql: 'true'
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username:
+    password:
+    properties:
+      mail:
+        debug: 'true'
+        smtp:
+          auth: 'true'
+          starttls:
+            enable: 'true'
+  #    open-in-view: 'false'
+  datasource:
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username:
+    url: jdbc:mysql://localhost:3306/hiretalent?useUnicode=true
+  data:
+    elasticsearch:
+      cluster-nodes: localhost:9200
+
+hiretalent:
+  secret: 2c2495ee71d1c35d57c1ba440a87b9a759dd37bbed6cf1cd4eb0b50813ef2e14
+  expires-in: 604800000
+
+linkedin:
+  client_id:
+  client_secret:
+
+scrape:
+  linkedin:
+    email:
+    password:
+
+selenium:
+  url: http://localhost:4444/wd/hub
+
+ldap:
+  url: ldap://localhost:10389
+  dc: example
+  dc2: com
+
+jasypt:
+  encryptor:
+    password:
